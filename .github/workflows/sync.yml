@@ -1,0 +1,25 @@
+name: Sync Blocklist
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # setiap Senin jam 00:00 UTC
+  workflow_dispatch:       # bisa trigger manual juga
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download latest blocklist
+        run: |
+          curl -o disposable_email_blocklist.conf \
+            https://raw.githubusercontent.com/disposable-email-domains/disposable-email-domains/master/disposable_email_blocklist.conf
+
+      - name: Commit and push if changed
+        run: |
+          git config user.email "github-actions@github.com"
+          git config user.name "GitHub Actions"
+          git add disposable_email_blocklist.conf
+          git diff --cached --quiet || git commit -m "chore: sync blocklist $(date +%Y-%m-%d)"
+          git push
